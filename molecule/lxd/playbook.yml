@@ -1,0 +1,9 @@
+---
+- name: Converge
+  hosts: all
+  vars:
+    - grafana_deployment_users_home: /root
+    - grafana_testing_provider: lxd
+
+  roles:
+    - grafana

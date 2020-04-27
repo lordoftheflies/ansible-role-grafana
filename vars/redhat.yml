@@ -1,0 +1,4 @@
+---
+# roles/grafana/vars/debian.yml
+
+grafana_package_extension: 'rpm'

@@ -1,0 +1,237 @@
+---
+# roles/grafana/defaults/main.yml
+
+grafana_debug: false
+
+grafana_controller_user: '{{ project_controller_user }}'
+grafana_controller_home: '{{ project_controller_home }}'
+grafana_controller_resources_root: '{{ project_controller_resources_home }}'
+
+grafana_deployment_user: '{{ project_deployment_user }}'
+grafana_deployment_home: '{{ project_deployment_home }}'
+grafana_deployment_resources_root: '{{ project_deployment_resources_home }}'
+
+## atomic versioning example
+#
+# grafana_major: '0'
+# grafana_moderate_revision: '0'
+# grafana_minor_revision: '1'
+# grafana_build: ''
+
+## Package #
+
+grafana_package_state: 'present'
+grafana_package_version: '2.0.1'
+grafana_package_filename: "vagrant_{{ grafana_package_version }}_i686.deb"
+
+grafana_controller_resources_dir: '{{ grafana_controller_resources_root }}/sw/vagrant/debs'
+grafana_deployment_resources_dir: '{{ grafana_deployment_resources_root }}/vagrant/debs'
+
+# /tests/sw/{{ ansible_distribution| lower }}/{{ ansible_distribution_version }}/miniconda'
+
+# Help file
+
+grafana_acemenu_help_file_template_path: '{{ fact_role_path }}/templates/bin/acemenu/help/example_aceadmin_helpfile.md.j2'
+
+# Resources
+
+grafana_package_url: "https://releases.hashicorp.com/vagrant/2.0.1/vagrant_2.0.1_i686.deb"
+# grafana_checksum_url: "https://releases.hashicorp.com/vagrant/2.0.1/ vagrant_2.0.1_SHA256SUMS"
+# grafana_checksum_sig_url: "https://releases.hashicorp.com/vagrant/2.0.1/ vagrant_2.0.1_SHA256SUMS.sig"
+
+## links
+
+grafana_default_link_force: true
+
+########################################
+
+# Resources
+
+grafana_resources_on_local:
+
+  grafana_local_directories:
+
+    state: 'directory'
+    path: '{{ grafana_controller_resources_dir }}'
+    owner: '{{ grafana_controller_user }}'
+    group: '{{ grafana_controller_user }}'
+    mode: '0755'
+
+  grafana_local_clones:
+
+    become: ''
+    repo: 'https://github.com/cjsteel/script-bash-acemenu.git'
+    dest: '{{ grafana_controller_resources_dir }}/acemenu'
+    mode: '0700'
+    clone: true
+
+  grafana_local_downloads:
+
+    url: 'https://repo.continuum.io/miniconda/Miniconda2-4.3.30-Linux-x86_64.sh'
+    dest: '{{ grafana_controller_resources_dir }}/Miniconda2-latest-Linux-x86_64.sh'
+    owner: '{{ grafana_controller_user }}'
+    group: '{{ grafana_controller_user }}'
+    mode: '0700'
+    checksum: 'md5:bd1655b4b313f7b2a1f2e15b7b925d03'
+    resource_type: 'url'
+
+  grafana_local_file_copies:
+
+    state: "copy"
+    src: './files/example_playbook.yml'
+    dest: '{{ grafana_controller_resources_dir }}/copy_test.yml'
+    owner: '{{ grafana_controller_user }}'
+    group: '{{ grafana_controller_user }}'
+    mode: '0700'
+
+  grafana_local_file_touches:
+
+    state: 'touch'
+    path: '{{ grafana_controller_resources_dir }}/copy_test.yml'
+    owner: '{{ grafana_controller_user }}'
+    group: '{{ grafana_controller_user }}'
+    mode: '0770'
+
+  grafana_local_templated_files:
+
+
+    state: 'template'
+    src: './templates/template_test.md.j2'
+    dest: '{{ grafana_controller_resources_dir }}/test.md'
+    owner: '{{ grafana_controller_user }}'
+    group: '{{ grafana_controller_user }}'
+    mode: '0700'
+
+  grafana_local_blocksinfile:
+
+    type: 'blockinfile'
+    path: '{{ grafana_controller_resources_dir }}/test.md'
+    owner: '{{ grafana_controller_user }}'
+    group: '{{ grafana_controller_user }}'
+    mode: '0700'
+    insertafter: "EOF"
+    block: |
+      # if running bash
+      if [ -n "$BASH_VERSION" ]; then
+          # include /opt/display/bin/display if it exists
+          if [ -f "/opt/display/bin/display" ]; then
+              PATH="/opt/display/bin:$PATH"
+
+       	. "/opt/display/bin/"
+          fi
+      fi
+    state: "present"
+
+  grafana_local_standard_sym_links:
+
+    state: "link"
+    src: '{{ grafana_controller_resources_dir }}/test.md'
+    dest: '{{ grafana_controller_resources_dir }}/my_local_link'
+    owner: '{{ grafana_controller_user }}'
+    group: '{{ grafana_controller_user }}'
+    mode: '0700'
+    force: '{{ grafana_default_link_force }}'
+
+  grafana_local_relative_sym_links:
+
+    link_name: 'relative_link'
+    link_target: 'test.md'
+    link_dir: '{{ grafana_controller_resources_dir }}'
+    state: 'relative_link'
+#    owner: '{{ grafana_controller_user }}'
+#    group: '{{ grafana_controller_user }}'
+#    mode: '0700'
+
+grafana_resources_on_remote:
+
+  grafana_remote_directories:
+
+    state: 'directory'
+    path: '{{ grafana_deployment_resources_dir }}'
+    owner: '{{ grafana_deployment_user }}'
+    group: '{{ grafana_deployment_user }}'
+    mode: '0755'
+
+  grafana_remote_clones:
+
+    become: true
+    repo: 'https://github.com/cjsteel/script-bash-acemenu.git'
+    dest: '{{ grafana_deployment_resources_dir }}/acemenu'
+    mode: '0700'
+    clone: true
+
+  grafana_remote_downloads:
+
+    url: 'https://repo.continuum.io/miniconda/Miniconda2-4.3.30-Linux-x86_64.sh'
+    dest: '{{ grafana_deployment_resources_dir }}/Miniconda2-latest-Linux-x86_64.sh'
+    owner: '{{ grafana_deployment_user }}'
+    group: '{{ grafana_deployment_user }}'
+    mode: '0700'
+    checksum: 'md5:bd1655b4b313f7b2a1f2e15b7b925d03'
+    resource_type: 'url'
+
+  grafana_remote_file_copies:
+
+    state: "copy"
+    src: './files/example_playbook.yml'
+    dest: '{{ grafana_deployment_resources_dir }}/copy_test.yml'
+    owner: '{{ grafana_deployment_user }}'
+    group: '{{ grafana_deployment_user }}'
+    mode: '0700'
+
+  grafana_remote_file_touches:
+
+    state: 'touch'
+    path: '{{ grafana_deployment_resources_dir }}/copy_test.yml'
+    owner: '{{ grafana_deployment_user }}'
+    group: '{{ grafana_deployment_user }}'
+    mode: '0770'
+
+  grafana_remote_templates_files:
+
+    state: 'template'
+    src: './templates/template_test.md.j2'
+    dest: '{{ grafana_deployment_resources_dir }}/test.md'
+    owner: '{{ grafana_deployment_user }}'
+    group: '{{ grafana_deployment_user }}'
+    mode: '0700'
+
+  grafana_remote_blocksinfile:
+
+    type: 'blockinfile'
+    path: '{{ grafana_deployment_resources_dir }}/test.md'
+    owner: '{{ grafana_deployment_user }}'
+    group: '{{ grafana_deployment_user }}'
+    mode: '0700'
+    insertafter: "EOF"
+    block: |
+      # if running bash
+      if [ -n "$BASH_VERSION" ]; then
+          # include /opt/display/bin/display if it exists
+          if [ -f "/opt/display/bin/display" ]; then
+              PATH="/opt/display/bin:$PATH"
+
+       	. "/opt/display/bin/"
+          fi
+      fi
+    state: "present"
+
+  grafana_remote_standard_sym_links:
+
+    state: 'link'
+    src: '{{ grafana_deployment_resources_dir }}/test.md'
+    dest: '{{ grafana_deployment_resources_dir }}/my_remote_link'
+    owner: '{{ grafana_deployment_user }}'
+    group: '{{ grafana_deployment_user }}'
+    mode: '0700'
+    force: '{{ grafana_default_link_force }}'
+
+  grafana_remote_relative_sym_links:
+
+    state: 'relative_link'
+    link_dir: '{{ grafana_deployment_resources_dir }}'
+    link_name: 'my_relative_link'
+    link_target: 'test.md'
+    owner: '{{ grafana_deployment_user }}'
+    group: '{{ grafana_deployment_user }}'
+    mode: '0700'
